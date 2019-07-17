@@ -1,0 +1,737 @@
+---
+title: "Data Deep Dive: Understanding Injury Data"
+output: learnr::tutorial
+Author: Ezgi Karaesmen
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(learnr)
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(neiss)
+
+# injury_data <- left_join(injuries, products, by = c("prod1" = "code")) %>%
+#   rename(product1 = title) %>%
+#   left_join(., products, by = c("prod2" = "code")) %>%
+#   rename(product2 = title)
+# 
+# injury_data <- injury_data %>%
+#   select(date=trmt_date,
+#          age:body_part, -race_other,
+#          diagnosis = diag,
+#          diagnosis_other = diag_other,
+#          product=product1,
+#          product_other=product2,
+#          disposition, location,
+#          fire_dept = fmv,
+#          n_injuries =weight,
+#          description=narrative)
+
+injury_data <- read_rds("~/Google Drive/OSU_PhD/TeachingMaterials/SummerCamp2019/tutorial/demo_data.rds")
+
+```
+
+## Introduction
+
+Let's get started!
+
+In this activity, you will learn and apply mathematical modeling skills and R programming skills to create models to help people improve their work and make decisions.
+
+### What is R?
+
+Google the letter "R", what do you think you will get?  
+
+The first result is almost always **R: The R Project for Statistical Computing**.  
+
+R is an open-source programming language for computing, statistics, modeling, and graphical analysis. With its great reliability and versatility, R is now ranked the most popular data science tool and the sixth most popular programming language in the world.  
+
+Top-tier companies use R. Facebook, Google, Twitter, Microsoft, Uber, Airbnb...use R to perform user behavior analysis, advertising effectiveness, data visualization, risk modeling, and much more.
+
+The best part, it is easy to get started with R. You don't need to be a programmer. R was created to allow you to use powerful computational tools with intuitive, simple commands.    
+
+Go to next topic to see how you will execute code for today's exercices.
+
+## R Coding Space
+
+Throughout this module, you will practice coding in the **R coding space** (shown below). This special text box allows you to communicate with R. The black texts inside are **code**, which is a sequence of **commands** to carry out certain tasks. The green texts starting with the hashtag (#) are **comments**, which are explanations for humans to understand the code. R will ignore them when you run the code. 
+
+You will use the R coding space in several ways: 1) to study examples, 2) to complete coding exercises, 3) to code on your own from scratch. Follow the instructions below to get familiar with the R coding space.
+
+### **Study Examples**  
+
+* Click the **Run Code** button at the top-right corner, then you will see the outputs below the R coding space. 
+* You can change the code, run it again, and check how the outputs change. Now try these in the nex code space     
+    + Change `x = -30:30` to `x = -20:40`, click Run Code again, check how the graph changes; 
+    + Change `y = x ^ 2` to `y = x ^ 3`, rerun it, and see what happens;
+    + Change `"deepskyblue"` to `"violet"`, rerun it, and see what you've got;   
+    + Change `"My Graph"` to some title you like (make sure to enclose with parentheses), rerun and check your new title.  
+
+  
+* To restore the example code, click **Start Over** at the top-left corner.  
+
+```{r r-coding-space, exercise = TRUE}
+# ---------- EXAMPLE ----------
+# create variable `x` and assign a sequence of numbers
+x = -30:30
+# create variable `y` and assign the squared values of variable `x`
+y = x ^ 2
+# plot y over x
+plot(x, y, col = "deepskyblue", main = "My Graph", pch=)
+
+plot(cos(c(10:110, -110:-10)), sin(c(20:120, -120:-20)), pch=20, col="pink")
+
+x = seq(0, 50, by=0.01)
+plot(cos(c(x, x, -x)), sin(c(x, x+40, -(x+40))), pch=20, col="red")
+```
+<br>
+
+**Coding Exercises**  
+
+You will complete coding exercises throughout the project. The coding space below shows an example. These exercises have three components:
+
+*Instruction*  
+
+- The comments (e.g., "Create variable 'x'...") give you instructions on what code to write. You can write your code right below the comments.  
+
+*Hint*  
+
+- If you need help, click the **Hint** button at the top, a **hint window** will show up with **partial code** and additional instructions to help you complete the code (e.g., `1:60` generates a sequence from 1 to 60).  
+- If you would like to copy the partial code, click the **Copy to Clipboard** button at the top-right corner of the hint window, and paste it to the coding space (right-click and paste, Control+V on Windows, or Command+V on Mac).  
+- The partial code contains underscores (____) to indicate blanks to fill. Make sure you remove the underscores before running the code.  
+
+*Solution*  
+
+- To see a sample solution, click **Next Hint** at the top of the hint window. Once you see the solution, you cannot go back to the hint.  
+- Some exercises do not provide sample solutions. In that case, you can ask the teacher to check your work or compare your work with your partner's.
+
+```{r exercise, exercise = TRUE, exercise.lines = 10}
+# ---------- EXERCISE ----------
+# Create variable `x` and assign a sequence of numbers 1 to 60
+
+
+# Create variable `y` and assign the square roots of values in variable `x`
+
+
+# Plot y over x, choose your favorite color, and create a title
+
+
+```
+
+```{r exercise-hint-1}
+# ---------- EXERCISE ----------
+# Create variable `x` and assign a sequence of numbers 1 to 60
+# HINT: `1:60` generates a sequence from 1 to 60 
+# x = ______
+
+# Create variable `y` and assign the square roots of values in variable `x`
+# HINT: use the `sqrt()` function
+# y = ______
+
+# Plot y over x, choose your favorite color, and create a title.
+# HINT: x for x-axis, y for y-axis
+# plot(_____, _____, col = "______", main = "______")
+```
+
+```{r exercise-solution}
+# ---------- EXERCISE ----------
+# Create variable `x` and assign a sequence of numbers 1 to 60
+x = 1:60
+
+# Create variable `y` and assign the square roots of values in variable `x`
+y = sqrt(x)
+
+# Plot y over x, choose your favorite color, and create a title
+plot(x, y, col = "forestgreen", main = "Square Root")
+
+```
+
+**From Scratch**
+
+As you develop more skills, you can start to write your own code from scratch.
+You can use **My Code** on the next page to experiment ideas, combine code snippets, and run longer code.
+
+## My Code
+
+<center>
+> Talk is cheap.
+> Show me the code.
+
+----- *Linus Torvalds*, Creator of the Linux kernel
+</center>
+
+```{r my-coding-space, exercise = TRUE, exercise.lines = 30}
+
+```
+
+## NEISS Data
+
+```{r burning_img, echo=FALSE, out.width='80%', fig.cap="https://www.dolmanlaw.com/product-liability-claims-in-florida/", fig.align="center"}
+knitr::include_graphics('https://cdn.shortpixel.ai/client/q_glossy,ret_img,w_768/https://www.dolmanlaw.com/wp-content/uploads/2018/09/Product-Liability-Claims-in-Florida-768x512.jpg')
+```
+
+Today we will work with National Electronic Injury Surveillance System (NEISS) dataset. NEISS is operated by Consumer Product Safety Comission (CPSC) which aims to protect public from unsafe products (like laptops that catch on fire unexpectedly due to production errors). The primary purpose of NEISS is to collect data on consumer product-related injuries occurring in the United States. CPSC then uses this data to estimate product-related injuries and take neccassary action. But since 2000, CPSC expanded NEISS to collect all injuries and NEISS has become an important public health research tool. You can find more information about NEISS [here](https://www.cpsc.gov/Research--Statistics/NEISS-Injury-Data/).
+
+
+## Take a look at injury dataset
+
+Today we will work with a large dataset called `injury_data`. As such we cannot simply look at all of it, otherwise it would fill our entire screen with a lot of words and numbers! So to understand what kind of information is contained in a dataset, we usually take a look at the top several rows. It may also be a better idea to understand how many rows and columns a dataset has before doing operations with it. Let's see how big this dataset is:
+
+**Check number of rows with `nrow()`**
+
+```{r neiss_intro_row, exercise=TRUE, exercise.lines = 3}
+
+# Print the number of rows of a dataset
+```
+
+```{r neiss_intro_row-hint}
+
+# HINT: Use nrow() function
+# nrow(_____)
+```
+
+```{r neiss_intro_row-solution}
+
+# nrow(injury_data)
+```
+
+**Check number of columns with `ncol()`**
+
+```{r neiss_intro_col, exercise=TRUE, exercise.lines = 3}
+
+# Check the number of columns
+
+```
+
+```{r neiss_intro_col-hint}
+
+# HINT: Use ncol() function
+# ncol(_____)
+```
+
+```{r neiss_intro_col-solution}
+
+# HINT: Use ncol() function
+ncol(injury_data)
+```
+
+
+**Look at first 6 rows with `head()`**
+
+```{r neiss_intro_head, exercise=TRUE, exercise.lines = 3}
+
+# Look at first 6 rows
+```
+
+
+```{r neiss_intro_head-hint}
+
+# HINT: Use head() function
+# head(____)
+```
+
+```{r neiss_intro_head-solution}
+
+# HINT: Use head() function
+head(injury_data)
+```
+
+
+Because `injury_data` has more columns than what can be fit to the screen, table output shows only some of them. You can click on **right and left arrows** on top of the table to see other columns. You can also see which columns are shown on the bottom of the table. 
+
+Alternatively you can also use `colnames()` to see a list of all column names in the dataset.
+
+```{r neiss_intro_colnames, exercise=TRUE, exercise.lines = 3}
+
+# Print column names
+
+```
+
+```{r neiss_intro_colnames-hint}
+
+# HINT: Use colnames() function
+# colnames(____)
+
+```
+
+```{r neiss_intro_colnames-solution}
+
+# Print column names
+colnames(injury_data)
+```
+
+
+**Are the column names clear? Discuss with your group what type of information is contained in this dataset.**
+
+See if you can now answer the following questions:
+
+```{r neiss-intro-quiz}
+quiz(
+  question("How many rows does `injury_data` has?",
+    answer("543,728"),
+    answer("42,368"),
+    answer("1,865,651", correct = TRUE),
+    answer("3,85")
+  ),
+   question("How many columns does `injury_data` has?",
+    answer("6,832"),
+    answer("14", correct = TRUE),
+    answer("1,865,651"),
+    answer("8")
+  ),
+     question("What type of information **cannot** be obtained from this dataset?",
+    answer("Age of the patient"),
+    answer("Body part that was injured"),
+    answer("Name of the patient", correct = TRUE),
+    answer("Decription of the accident from the hospital"),
+    answer("Location of the hospital", correct = TRUE),
+    answer("Product/object involved in the injury"),
+    type = "multiple",
+    allow_retry =TRUE
+  )
+
+)
+```
+
+**Find the date range of the dataset**
+
+You can see that there is a `date` column in the dataset, giving the date of the accident. Let's find out between which dates this data was collected.   
+
+- Run the following code to get the first and last days included in the data. Look at the code and discuss with your group what you think the code is doing.      
+- Then remove `first_day =` and `last_day =` and run again.
+
+```{r date_exercise, exercise=TRUE, exercise.lines = 6}
+
+# Run the code to get first and last days of the data
+# then remove `first_day =` and `last_day =` and run again.
+injury_data %>%
+  summarise(first_day = min(date),
+            last_day = max(date))
+
+```
+
+```{r date_exercise-hint}
+
+injury_data %>%
+  summarise(min(date), max(date))
+
+```
+
+What happened? 
+
+<br>
+
+- Now get the time difference between these dates. How many days were recorded in the dataset? *Hint: You can do simple math operations in the `summarise()` function.*
+
+
+```{r date_exercise2, exercise=TRUE, exercise.lines = 5}
+
+# Get the time difference 
+# between first and last day in the data
+
+```
+
+
+```{r date_exercise2-hint}
+
+# Hint: You can do simple math operations in the `summarise()` function
+# injury_data %>%
+#  summarise(____ - ____)
+
+```
+
+```{r date_exercise2-solution}
+
+# Hint: You can do simple math operations in the `summarise()` function
+injury_data %>%
+  summarise(min(date) - max(date))
+
+```
+
+```{r date-quiz}
+quiz(
+  question("How many days were recorded in `injury_data`?",
+    answer("543,728"),
+    answer("756"),
+    answer("1,825", correct = TRUE),
+    answer("3,549")
+  ))
+```
+
+<br>
+
+How many years are **1825** days? You can also do simple math in R.
+
+```{r years_ex, exercise =TRUE, exercise.lines = 4}
+# How many years is 1825 days?
+```
+
+```{r years_ex-hint}
+# 1825 / ____
+```
+
+
+## What?! Where?? How? 
+
+```{r injury_img, echo=FALSE, out.width='80%', fig.cap="Photo courtesy Getty Images", fig.align="center"}
+knitr::include_graphics('https://globalsportmatters.com/wp-content/uploads/2018/06/Childrens-sports-injuries.jpg')
+```
+
+
+Imagine you're injured during practice, your friend calls your parents and tells them that you were injured. What do you think their reaction would be? They probably would like to find out what part of your body was injured, how serious it is and where you are at the moment. 
+
+Let's see if we can get some answers for these burning questions from the our dataset `injury_data`. 
+
+In the code chunk below we start asking the question **where** most accidents happen. To answer this we will:       
+
+1. Group all observations (rows of the table) by the categories in `location` column  
+2. Sum the number of injuries given in the `n_injuries` column   
+3. Pick top 10 with most number of injuries   
+4. Arrange our results in descending order
+
+Look at the code, does it make sense?
+
+```{r location_ex, exercise=TRUE, exercise.lines=8, message=FALSE}
+# Run the code to find out where most injuries happen?
+injury_data %>% 
+  group_by(location) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries)
+```
+
+While we can now see the top locations where people are most frequently  injured, human brains aren't very good at simply looking at numbers and comparing them. We do much better when we turn such results into plots and have a visual representation. Let's add some more code to turn these results into a bar plot!    
+
+<!-- ```{r location_ex2, exercise=TRUE, exercise.lines=8, message=FALSE} -->
+<!-- # Assign the result to a variable called `location_top10` -->
+<!-- injury_data %>%  -->
+<!--   group_by(location) %>%  -->
+<!--   summarise(number_of_injuries=sum(n_injuries)) %>%  -->
+<!--   top_n(10) %>% -->
+<!--   arrange(-number_of_injuries) -->
+<!-- ``` -->
+
+<!-- ```{r location_ex2-hint} -->
+<!-- # HINT: use assignment sign `<-`  -->
+<!-- location_top10 <- injury_data %>%  -->
+<!--   group_by(location) %>%  -->
+<!--   summarise(number_of_injuries=sum(n_injuries)) %>%  -->
+<!--   top_n(10) %>% -->
+<!--   arrange(-number_of_injuries) -->
+
+<!-- location_top10 -->
+<!-- ``` -->
+
+<!-- Now let's make bar plots with our new variable! -->
+
+<!-- ```{r location_plot-setup} -->
+<!-- location_top10 <- injury_data %>%  -->
+<!--   group_by(location) %>%  -->
+<!--   summarise(number_of_injuries=sum(n_injuries)) %>%  -->
+<!--   top_n(10) %>% -->
+<!--   arrange(-number_of_injuries) -->
+
+<!-- ``` -->
+
+
+```{r location_plot, exercise=TRUE, exercise.lines=10, message=FALSE}
+# Run the code to make a bar plot
+injury_data %>% 
+  group_by(location) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  # up until here we have the same exact code from before
+  # code below makes the plot
+  ggplot(aes(reorder(location, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+Wow! Looks so much better!
+
+**Now let use the same code to explore other things in our dataset.**     
+
+We are still very curious about most frequently injured body parts and most frequently observed injury diagnosis. All you need to do is now group the dataset by `body_part` or `diagnosis`. You need to make small changes in the code below to get results. See if you can figure it out! Click on **Hints** to get hints!
+
+```{r body_bp, exercise=TRUE, exercise.lines=14, message=FALSE}
+
+# Change the code to get results for body_part
+injury_data %>% 
+  group_by(location) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(location, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+```{r body_bp-hint-1, message=FALSE}
+# Where do you see `location` in the code? 
+# injury_data %>% 
+#   group_by(____) %>% 
+#   summarise(number_of_injuries=sum(n_injuries)) %>% 
+#   top_n(10) %>%
+#   arrange(-number_of_injuries) %>% 
+#   ggplot(aes(reorder(____, number_of_injuries), 
+#              number_of_injuries)) +
+#   geom_col() +
+#   coord_flip() +
+#   scale_y_continuous(labels = scales::comma)+  
+#   xlab("") +
+#   ylab("Number of injuries")
+```
+
+```{r body_bp-hint-2, message=FALSE}
+# Replace any `location` in the code with `body_part`
+injury_data %>% 
+  group_by(body_part) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(body_part, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+<br>
+
+Now do the same thing for diagnosis!
+
+```{r diag_bp, exercise=TRUE, exercise.lines=14, message=FALSE}
+# Change the code to get results for diagnosis
+injury_data %>% 
+  group_by(location) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(location, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+
+```{r diag_bp-solution, message=FALSE}
+# Replace any `location` in the code with `diagnosis`
+injury_data %>% 
+  group_by(diagnosis) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(diagnosis, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+Are you not familiar with some of these medical terms in diagnosis? No worries, just Google them! Beware if you want to look at the images though some maybe disturbing!
+
+Now see if you can answer these questions
+
+```{r body_diag-quiz}
+quiz(
+  question("What is the **3rd** most frequently injured body part?",
+    answer("Face"),
+    answer("Head"),
+    answer("Finger", correct = TRUE),
+    answer("Foot"),
+    random_answer_order = TRUE
+  ),
+    question("What is the most frequently observed diagnosis in the dataset?",
+    answer("Fracture"),
+    answer("Concussion"),
+    answer("Laceration", correct = TRUE),
+    answer("Dislocation"),
+    random_answer_order = TRUE
+  )
+  )
+```
+
+
+**What about least frequently injured body parts?**
+Again all you need is to make some small changes to the code. You don't need to change any of the functions. What do you think you should do?
+
+```{r body_least, exercise=TRUE, exercise.lines=15}
+# Change the code below to get the least injured body parts
+injury_data %>% 
+  group_by(body_part) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(body_part, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+```{r body_least-hint-1}
+# All you need is to add a `-` (minus) sign somewhere!
+
+```
+
+```{r body_least-hint-2}
+# All you need is to add a `-` (minus) sign somewhere!
+# Just change top_n(10) to top_n(-10)!
+
+injury_data %>% 
+  group_by(body_part) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(-10) %>%
+  arrange(number_of_injuries) %>% 
+  ggplot(aes(reorder(body_part, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries")
+```
+
+
+## Ladies and Gentlemen!
+
+```{r by_sex_img, echo=FALSE, out.width='80%', fig.cap="", fig.align="center"}
+knitr::include_graphics('img/injured_man_woman.png')
+```
+
+
+Now, let's dive deeper! Do you think males get injured more often than females? 
+
+<!-- ## Injured body parts -->
+
+<!-- # Analysis 1 -->
+<!-- 1. What are the top three body parts most frequently represented in this dataset? -->
+<!-- 2. What are the top three body parts that are least frequently represented? -->
+
+
+<!-- ### Analysis 2 -->
+
+<!-- 1. How many injuries in this dataset involve a skateboard? -->
+
+<!-- 2. Of those injuries, what percentage were male and what percentage were female? -->
+
+<!-- 3. What was the average age of someone injured in an incident involving a skateboard? -->
+
+<!-- ### Conclusion -->
+<!-- * People who drowned and with fractures are getting admitted since they are injuries that can't be self treated or cured instantly  -->
+<!-- * I can conclude from this analysis that people  with poisoning and foreign objects are leaving without being seen since they felt the injury they have is not serious enough for admission and treatment or because they are not happy with the treatment (cost of treatment)suggested by the doctor. -->
+<!-- * Even for small burns due to chemicals people believe it can be self cured and they do not need professional medical attention to it. -->
+
+<!-- https://raw.githubusercontent.com/harrykrish/NEISS-Data-Analysis/master/ReadMe.md -->
+
+<!-- https://www.r-bloggers.com/return-of-the-neiss-data/ -->
+
+<!-- https://www.cpsc.gov/Research--Statistics/NEISS-Injury-Data/ -->
+
+<!-- ## Topic 1 -->
+
+<!-- ### Exercise  -->
+
+<!-- *Here's a simple exercise with an empty code chunk provided for entering the answer.* -->
+
+<!-- Write the R code required to add two plus two: -->
+
+<!-- ```{r two-plus-two, exercise=TRUE} -->
+
+<!-- ``` -->
+
+<!-- ### Exercise with Code -->
+
+<!-- *Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.* -->
+
+<!-- Now write a function that adds any two numbers and then call it: -->
+
+<!-- ```{r add-function, exercise=TRUE, exercise.lines = 5} -->
+<!-- add <- function() { -->
+
+<!-- } -->
+<!-- ``` -->
+
+<!-- ## Topic 2 -->
+
+<!-- ### Exercise with Hint -->
+
+<!-- *Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.* -->
+
+<!-- Modify the following code to limit the number of rows printed to 5: -->
+
+<!-- ```{r print-limit, exercise=TRUE, exercise.eval=TRUE} -->
+<!-- mtcars -->
+<!-- ``` -->
+
+<!-- ```{r print-limit-hint} -->
+<!-- head(iris) -->
+<!-- ``` -->
+
+<!-- ```{r print-limit-solution} -->
+<!-- head(mtcars) -->
+<!-- ``` -->
+
+
+
+<!-- ## Topic 3 -->
+
+<!-- ### Exercise with Hint -->
+
+<!-- *Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.* -->
+
+<!-- Modify the following code to limit the number of rows printed to 5: -->
+
+<!-- ```{r plot, exercise=TRUE, exercise.eval=TRUE} -->
+<!-- mtcars -->
+<!-- ``` -->
+
+
+<!-- below make a plot -->
+<!-- ```{r plot-hint} -->
+<!-- head(mtcars) -->
+
+<!-- library(tidyverse) -->
+<!-- mtcars %>% -->
+<!--   ggplot(aes(mpg, cyl)) + -->
+<!--   geom_point() -->
+<!-- ``` -->
+
+
+<!-- ### Quiz -->
+
+<!-- *You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.* -->
+
+<!-- Some questions to verify that you understand the purposes of various base and recommended R packages: -->
+
+<!-- ```{r quiz} -->
+<!-- quiz( -->
+<!--   question("Which package contains functions for installing other R packages?", -->
+<!--     answer("base"), -->
+<!--     answer("tools"), -->
+<!--     answer("utils", correct = TRUE), -->
+<!--     answer("codetools") -->
+<!--   ), -->
+<!--   question("Which of the R packages listed below are used to create plots?", -->
+<!--     answer("lattice", correct = TRUE), -->
+<!--     answer("tools"), -->
+<!--     answer("stats"), -->
+<!--     answer("grid", correct = TRUE) -->
+<!--   ) -->
+<!-- ) -->
+<!-- ``` -->
+

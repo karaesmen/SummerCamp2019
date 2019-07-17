@@ -1,0 +1,13 @@
+name: SummerCamp2019
+title: SummerCamp2019
+username:
+account: suchestoncampbell-lab
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1035425
+bundleId: 2238454
+url: https://suchestoncampbell-lab.shinyapps.io/SummerCamp2019/
+when: 1563310643.5625
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: demo_data.rds|SummerCamp2019_files/figure-html/unnamed-chunk-2-1.png|SummerCamp2019_files/figure-html/unnamed-chunk-3-1.png
