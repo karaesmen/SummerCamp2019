@@ -1,12 +1,12 @@
 ---
-title: "Data Deep Dive: Understanding Injury Data"
+title: "Data Deep Dive: Understanding Injury Data with R"
 output: learnr::tutorial
 Author: Ezgi Karaesmen
 runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 library(learnr)
 library(tidyverse)
@@ -14,32 +14,51 @@ library(lubridate)
 library(scales)
 library(neiss)
 
-# injury_data <- left_join(injuries, products, by = c("prod1" = "code")) %>%
-#   rename(product1 = title) %>%
-#   left_join(., products, by = c("prod2" = "code")) %>%
-#   rename(product2 = title)
-# 
-# injury_data <- injury_data %>%
-#   select(date=trmt_date,
-#          age:body_part, -race_other,
-#          diagnosis = diag,
-#          diagnosis_other = diag_other,
-#          product=product1,
-#          product_other=product2,
-#          disposition, location,
-#          fire_dept = fmv,
-#          n_injuries =weight,
-#          description=narrative)
+injury_data <- left_join(injuries, products, by = c("prod1" = "code")) %>%
+  rename(product1 = title) %>%
+  left_join(., products, by = c("prod2" = "code")) %>%
+  rename(product2 = title)
 
-injury_data <- read_rds("~/Google Drive/OSU_PhD/TeachingMaterials/SummerCamp2019/tutorial/demo_data.rds")
+injury_data <- injury_data %>%
+  select(date=trmt_date,
+         age:body_part, -race_other,
+         diagnosis = diag,
+         diagnosis_other = diag_other,
+         product=product1,
+         product_other=product2,
+         disposition, location,
+         fire_dept = fmv,
+         n_injuries =weight,
+         description=narrative)
+
+plot_injury_grp_top10 <- function(my_data, my_column){
+  my_column <- enquo(my_column)
+  
+  my_data %>%
+  group_by(!!my_column) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(!!my_column, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries") 
+}
+
+# To render things quicker when creating the tutorial locally
+# injury_data <- read_rds("~/Google Drive/OSU_PhD/TeachingMaterials/SummerCamp2019/tutorial/demo_data.rds")
 
 ```
 
 ## Introduction
 
+Hi there! My name is Ezgi Karaesmen, but you can just call me "Ez". I am a PhD student at the OSU College of Pharmacy and I love working with data. You can find more information about me [here](https://ezgi-karaesmen.netlify.com) and feel free to contact me if you have any questions!
+
 Let's get started!
 
-In this activity, you will learn and apply mathematical modeling skills and R programming skills to create models to help people improve their work and make decisions.
+In this activity, you will learn how to explore a publicly available dataset using R programming.
 
 ### What is R?
 
@@ -53,7 +72,7 @@ Top-tier companies use R. Facebook, Google, Twitter, Microsoft, Uber, Airbnb...u
 
 The best part, it is easy to get started with R. You don't need to be a programmer. R was created to allow you to use powerful computational tools with intuitive, simple commands.    
 
-Go to next topic to see how you will execute code for today's exercices.
+Go to next topic to see how you will execute code for today's exercises.
 
 ## R Coding Space
 
@@ -64,7 +83,7 @@ You will use the R coding space in several ways: 1) to study examples, 2) to com
 ### **Study Examples**  
 
 * Click the **Run Code** button at the top-right corner, then you will see the outputs below the R coding space. 
-* You can change the code, run it again, and check how the outputs change. Now try these in the nex code space     
+* You can change the code, run it again, and check how the outputs change. Now try these in the next code space     
     + Change `x = -30:30` to `x = -20:40`, click Run Code again, check how the graph changes; 
     + Change `y = x ^ 2` to `y = x ^ 3`, rerun it, and see what happens;
     + Change `"deepskyblue"` to `"violet"`, rerun it, and see what you've got;   
@@ -82,10 +101,6 @@ y = x ^ 2
 # plot y over x
 plot(x, y, col = "deepskyblue", main = "My Graph", pch=)
 
-plot(cos(c(10:110, -110:-10)), sin(c(20:120, -120:-20)), pch=20, col="pink")
-
-x = seq(0, 50, by=0.01)
-plot(cos(c(x, x, -x)), sin(c(x, x+40, -(x+40))), pch=20, col="red")
 ```
 <br>
 
@@ -173,7 +188,7 @@ You can use **My Code** on the next page to experiment ideas, combine code snipp
 knitr::include_graphics('https://cdn.shortpixel.ai/client/q_glossy,ret_img,w_768/https://www.dolmanlaw.com/wp-content/uploads/2018/09/Product-Liability-Claims-in-Florida-768x512.jpg')
 ```
 
-Today we will work with National Electronic Injury Surveillance System (NEISS) dataset. NEISS is operated by Consumer Product Safety Comission (CPSC) which aims to protect public from unsafe products (like laptops that catch on fire unexpectedly due to production errors). The primary purpose of NEISS is to collect data on consumer product-related injuries occurring in the United States. CPSC then uses this data to estimate product-related injuries and take neccassary action. But since 2000, CPSC expanded NEISS to collect all injuries and NEISS has become an important public health research tool. You can find more information about NEISS [here](https://www.cpsc.gov/Research--Statistics/NEISS-Injury-Data/).
+Today we will work with National Electronic Injury Surveillance System (NEISS) dataset. NEISS is operated by Consumer Product Safety Commission (CPSC) which aims to protect public from unsafe products (like laptops that catch on fire unexpectedly due to production errors). The primary purpose of NEISS is to collect data on consumer product-related injuries occurring in the United States. CPSC then uses this data to estimate product-related injuries and take necessary action. But since 2000, CPSC expanded NEISS to collect all injuries and NEISS has become an important public health research tool. You can find more information about NEISS [here](https://www.cpsc.gov/Research--Statistics/NEISS-Injury-Data/).
 
 
 ## Take a look at injury dataset
@@ -286,7 +301,7 @@ quiz(
     answer("Age of the patient"),
     answer("Body part that was injured"),
     answer("Name of the patient", correct = TRUE),
-    answer("Decription of the accident from the hospital"),
+    answer("Description of the accident from the hospital"),
     answer("Location of the hospital", correct = TRUE),
     answer("Product/object involved in the injury"),
     type = "multiple",
@@ -606,132 +621,294 @@ injury_data %>%
   ylab("Number of injuries")
 ```
 
+But before we move on to the next section, I want to write a custom function so I wouldn't have to repeat the same code all the time. Because I am always:     
 
-## Ladies and Gentlemen!
+1. Starting with my dataset
+1. Grouping it by the column of interest    
+1. Getting total number of injuries in each category    
+1. Getting top 10 of these most frequent categories
+1. Plotting
 
-```{r by_sex_img, echo=FALSE, out.width='80%', fig.cap="", fig.align="center"}
-knitr::include_graphics('img/injured_man_woman.png')
+See the example code below, I turn all these steps into a function that simply accepts the column of interest and does the rest. I named this function `plot_injury_grp_top10`, it is not the most creative and succinct name but helps me remember what it was designed to do. 
+
+Run the code below and change `plot_injury_grp_top10(diagnosis)` to body_part, location or sex to see if the function is working properly.
+
+```{r func, exercise = TRUE, exercise.lines = 20}
+plot_injury_grp_top10 <- function(my_data, my_column){
+  my_column <- enquo(my_column)
+  
+  my_data %>%
+  group_by(!!my_column) %>% 
+  summarise(number_of_injuries=sum(n_injuries)) %>% 
+  top_n(10) %>%
+  arrange(-number_of_injuries) %>% 
+  ggplot(aes(reorder(!!my_column, number_of_injuries), number_of_injuries)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)+  
+  xlab("") +
+  ylab("Number of injuries") 
+  }
+
+# Change diagnosis to body_part, location or sex 
+# to see if the function is working properly
+injury_data %>%
+  plot_injury_grp_top10(diagnosis)
+
 ```
 
 
-Now, let's dive deeper! Do you think males get injured more often than females? 
+## Home sweet home
 
-<!-- ## Injured body parts -->
+```{r byloc_img, echo=FALSE, out.width='80%', fig.cap="http://www.getliquid.com/news/2011/3/9/housing-costs-going-through-the-roof.html", fig.align="center"}
+knitr::include_graphics("https://static.squarespace.com/static/52f3ac0ae4b014c84ab04f80/53586543e4b03ef5a934b13f/53586543e4b03ef5a934b284/1299650336367/1000w/breaking-through-the-roof.jpg")
+```
 
-<!-- # Analysis 1 -->
-<!-- 1. What are the top three body parts most frequently represented in this dataset? -->
-<!-- 2. What are the top three body parts that are least frequently represented? -->
+We now know that most injuries happen at home! Let's explore what products are involved with home injuries. 
+
+To get these results we first need to **filter** our results where location of the injury is "Home".
+
+Look at the code below. Discuss with your group what is new in the code (other than our home made function `plot_injury_grp_top10`).
+
+```{r home_prod, exercise=TRUE, exercise.lines=5}
+# Run the code to see top 10 products involved in home injuries
+injury_data %>%
+  filter(location == "Home") %>%
+  plot_injury_grp_top10(product)
+```
+
+```{r home_prod-hint}
+# Run the code to see top 10 products involved in home injuries
+injury_data %>%
+  filter(location == "Home") %>% # <-- line is added to filter data!
+  plot_injury_grp_top10(product)
+```
+
+**Since many of you spend most of your time at school, let's also see what products are involved in injures that happen at schools!**
+
+Look at code below, change it to get the same results for school.
+
+```{r school_prod, exercise=TRUE, exercise.lines=15}
+# Change the code to see top 10 products involved in school injuries
+injury_data %>%
+  filter(location == "Home") %>%
+  plot_injury_grp_top10(product)
+```
+
+```{r school_prod-hint}
+# Change the "Home" to "School"
+```
+
+```{r school_prod-solution}
+# Change the code to see top 10 products involved in school injuries
+injury_data %>%
+  filter(location == "School") %>%
+  plot_injury_grp_top10(product)
+```
+
+**Do you think these results are surprising? Discuss with your group.**
+
+**Extra:** Try other locations in the dataset: `r unique(injury_data$location)`
+
+## Watch out!
+
+```{r watchout_img, echo=FALSE, out.width='80%', fig.cap="https://www.clipart.email/clipart/watch-out-clipart-21994.html", fig.align="center"}
+knitr::include_graphics("https://cdn.clipart.email/34202db6601e4c66f2946f440ae334e9_watch-out-elt-game-corner-eltnewscom-for-teaching-english-in-_380-262.jpeg")
+```
+
+ 
+Now let's try to figure out what products we should beware of at Home and at School.
+
+- I'm a women in late 20s, let's see what I should beware of at home. Which means I will filter the dataset based on:   
+ 1. My age group (25-35 years old)    
+ 1. My sex (female)   
+ 1. My location (home)
+ 
+```{r wout, exercise=TRUE, exercise.lines=7}
+# Run the code to find out what product could be involved in my injury.
+injury_data %>%
+  filter(between(age, 25, 35),
+         sex == "Female",
+         location == "Home") %>%
+  plot_injury_grp_top10(product)
+```
+ 
+See if you got it right! 
+ 
+```{r wout1-quiz}
+quiz(
+  question(
+    "Which product is most likely be involved if I'm injured at home?",
+    answer("Beds"),
+    answer("Bathtub"),
+    answer("Stairs", correct = TRUE),
+    answer("Doors"),
+    random_answer_order = TRUE
+  )
+)
+```
+
+Now try the same for yourself first at home then at school. Change your age group to "teens" (11-18 years).
+
+```{r wout_them, exercise=TRUE, exercise.lines=7}
+# Change the code to find out 
+# what product could be involved in your injury at home.
+injury_data %>%
+  filter(between(age, 25, 35),
+         sex == "Female",
+         location == "Home") %>%
+  plot_injury_grp_top10(product)
+```
+
+```{r wout_them-hint}
+# Change the conditions for the filter!
+# injury_data %>%
+#   filter(between(age, ____, ______),
+#          sex == "_____",
+#          location == "_____") %>%
+#   plot_injury_grp_top10(product)
+
+```
+
+```{r wout_them-hint-solution}
+# Change the conditions for the filter!
+injury_data %>%
+  filter(between(age, 11, 18),
+         sex == "Female",
+         location == "Home") %>%
+  plot_injury_grp_top10(product)
+
+```
+
+**Are your results different than mine? Discuss with your group.**
+
+Also try for results at school!
+
+```{r wout_school, exercise=TRUE, exercise.lines=7}
+# Change the code to find out 
+# what product could be involved in your injury at home.
+injury_data %>%
+  filter(between(age, 25, 35),
+         sex == "Female",
+         location == "Home") %>%
+  plot_injury_grp_top10(product)
+```
+
+```{r wout_school-solution}
+# Change the conditions for the filter!
+injury_data %>%
+  filter(between(age, 11, 18),
+         sex == "Female",
+         location == "School") %>%
+  plot_injury_grp_top10(product)
+
+```
+
+## Red White & BOOM!
+
+```{r frwrks_img, echo=FALSE, out.width='80%', fig.cap="http://www.medicalwesthospital.org/fireworks-safety.php", fig.align="center"}
+knitr::include_graphics("http://www.medicalwesthospital.org/tyfoon/site/fckeditor/image/fireworks21.jpg")
+```
 
 
-<!-- ### Analysis 2 -->
+We all love fireworks, it's a great way to celebrate Fourth of July! But if not handled carefully, fireworks can be big problem! Let's explore injuries related to fireworks.
 
-<!-- 1. How many injuries in this dataset involve a skateboard? -->
+We all know, we don't get to see fireworks all the time, in the winter for example no one would like to stay outside in the cold and watch the fireworks. Let's see if we can see some changes in firework injuries over the 5 years between 2013 and 2017.
 
-<!-- 2. Of those injuries, what percentage were male and what percentage were female? -->
+**Run the code below and discuss the results with your group. Why do you think we are seeing those peaks?**
 
-<!-- 3. What was the average age of someone injured in an incident involving a skateboard? -->
+```{r frwrks_ex1, exercise=TRUE}
+# Run the code below to see number of firework injuries over months
+injury_data %>%
+  filter(product == "fireworks") %>%
+  group_by(date) %>%
+  summarise(number_of_injuries = sum(n_injuries)) %>%
+  ungroup() %>%
+  ggplot(aes(date, number_of_injuries)) +
+  geom_line() +
+  scale_x_date(date_breaks = "3 months" , date_labels = "%b") +
+  xlab("Months") +
+  ylab("Number of injuries")
 
-<!-- ### Conclusion -->
-<!-- * People who drowned and with fractures are getting admitted since they are injuries that can't be self treated or cured instantly  -->
-<!-- * I can conclude from this analysis that people  with poisoning and foreign objects are leaving without being seen since they felt the injury they have is not serious enough for admission and treatment or because they are not happy with the treatment (cost of treatment)suggested by the doctor. -->
-<!-- * Even for small burns due to chemicals people believe it can be self cured and they do not need professional medical attention to it. -->
+```
 
-<!-- https://raw.githubusercontent.com/harrykrish/NEISS-Data-Analysis/master/ReadMe.md -->
+**Let's see if there's a difference between sexes. Discuss the result with your group.**
 
-<!-- https://www.r-bloggers.com/return-of-the-neiss-data/ -->
+```{r frwrks_sex, exercise=TRUE}
+injury_data %>% 
+  filter(product == "fireworks") %>%
+  plot_injury_grp_top10(sex)
 
-<!-- https://www.cpsc.gov/Research--Statistics/NEISS-Injury-Data/ -->
+```
 
-<!-- ## Topic 1 -->
 
-<!-- ### Exercise  -->
+**What about the age distribution?**
 
-<!-- *Here's a simple exercise with an empty code chunk provided for entering the answer.* -->
+```{r frwrks_ex2, exercise=TRUE}
+injury_data %>% 
+  filter(product == "fireworks") %>%
+  pull(age) %>%
+  hist(breaks = 20, main = "Histogram of Age")
+```
 
-<!-- Write the R code required to add two plus two: -->
+What we see here is a histogram! It's a very useful kind of data visualization and used *a lot* in data analytics! Can you interpret what it's showing?
 
-<!-- ```{r two-plus-two, exercise=TRUE} -->
+If you're not familiar with histograms, here's a nice video that explains it nicely.
 
+![](https://www.youtube.com/watch?v=gSEYtAjuZ-Y)
+
+
+**Finally, let's see how often the fire department was involved in firework accidents.**
+
+```{r frwrks_ex3, exercise=TRUE}
+injury_data %>% 
+  filter(product == "fireworks") %>%
+  plot_injury_grp_top10(fire_dept)
+```
+
+Did this result surprise you?
+
+## Last words
+
+I hope you enjoyed your time with me today! 
+R is an open source programming language, which means you can install it to your computer for free and do all sorts of statistical analyses with it. Let me know if you are interested in learning more about R! 
+
+Also if you think you would enjoy math classes more with R, let your math teacher know and suggest them to visit [CodeR4MATH](https://concord.org/our-work/research-projects/computing-with-r/).
+
+## Acknowledgements
+
+- This tutorial was created with `learnr` package.  
+- Many thanks to [Kenia Wiedemann](https://concord.org/about/staff/kenia-wiedemann/) and [CodeR4MATH](https://concord.org/our-work/research-projects/computing-with-r/) for the inspiration and sections **Introduction**, **R Coding Space** and **My Code**.
+- Thanks to Hadley Wickham for creating the data package `neiss`
+
+<!-- ## Ladies and Gentlemen! -->
+
+<!-- Now, let's dive deeper! Do you think males get injured more often than females?  -->
+
+<!-- ```{r bysex_img, echo=FALSE, out.width='80%', fig.cap="VectorStock", fig.align="center"} -->
+<!-- knitr::include_graphics("SummerCamp2019_files/figure-html/injured_mw.png") -->
 <!-- ``` -->
 
-<!-- ### Exercise with Code -->
-
-<!-- *Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.* -->
-
-<!-- Now write a function that adds any two numbers and then call it: -->
-
-<!-- ```{r add-function, exercise=TRUE, exercise.lines = 5} -->
-<!-- add <- function() { -->
-
-<!-- } -->
+<!-- ```{r body_bysex-setup} -->
+<!-- injury_data <-  -->
+<!--   injury_data %>% -->
+<!--   filter(sex != "Unknown") -->
 <!-- ``` -->
 
-<!-- ## Topic 2 -->
+<!-- ```{r body_bysex, exercise=TRUE, exercise.lines=15, message=FALSE} -->
+<!-- # Run the code to see top 10 injured body parts by sex -->
+<!-- injury_data %>%  -->
+<!--   group_by(sex, body_part) %>%  -->
+<!--   summarise(number_of_injuries=sum(n_injuries)) %>%  -->
+<!--   top_n(10) %>% -->
+<!--   arrange(-number_of_injuries) %>%  -->
+<!--   ggplot(aes(reorder(body_part, number_of_injuries), number_of_injuries)) + -->
+<!--   geom_col(position = position_dodge()) + -->
+<!--   facet_grid(.~sex) + -->
+<!--   coord_flip() + -->
+<!--   scale_y_continuous(labels = scales::comma)+   -->
+<!--   xlab("") + -->
+<!--   ylab("Number of injuries") -->
 
-<!-- ### Exercise with Hint -->
-
-<!-- *Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.* -->
-
-<!-- Modify the following code to limit the number of rows printed to 5: -->
-
-<!-- ```{r print-limit, exercise=TRUE, exercise.eval=TRUE} -->
-<!-- mtcars -->
-<!-- ``` -->
-
-<!-- ```{r print-limit-hint} -->
-<!-- head(iris) -->
-<!-- ``` -->
-
-<!-- ```{r print-limit-solution} -->
-<!-- head(mtcars) -->
-<!-- ``` -->
-
-
-
-<!-- ## Topic 3 -->
-
-<!-- ### Exercise with Hint -->
-
-<!-- *Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.* -->
-
-<!-- Modify the following code to limit the number of rows printed to 5: -->
-
-<!-- ```{r plot, exercise=TRUE, exercise.eval=TRUE} -->
-<!-- mtcars -->
-<!-- ``` -->
-
-
-<!-- below make a plot -->
-<!-- ```{r plot-hint} -->
-<!-- head(mtcars) -->
-
-<!-- library(tidyverse) -->
-<!-- mtcars %>% -->
-<!--   ggplot(aes(mpg, cyl)) + -->
-<!--   geom_point() -->
-<!-- ``` -->
-
-
-<!-- ### Quiz -->
-
-<!-- *You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.* -->
-
-<!-- Some questions to verify that you understand the purposes of various base and recommended R packages: -->
-
-<!-- ```{r quiz} -->
-<!-- quiz( -->
-<!--   question("Which package contains functions for installing other R packages?", -->
-<!--     answer("base"), -->
-<!--     answer("tools"), -->
-<!--     answer("utils", correct = TRUE), -->
-<!--     answer("codetools") -->
-<!--   ), -->
-<!--   question("Which of the R packages listed below are used to create plots?", -->
-<!--     answer("lattice", correct = TRUE), -->
-<!--     answer("tools"), -->
-<!--     answer("stats"), -->
-<!--     answer("grid", correct = TRUE) -->
-<!--   ) -->
-<!-- ) -->
 <!-- ``` -->
 
