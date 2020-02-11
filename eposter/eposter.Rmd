@@ -1,0 +1,232 @@
+---
+title: "Teaching R to Teenagers: A learnr experience"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: flatly
+    css: styles.css
+    navbar:
+      - { title: "<i class='fab  fa-github-alt '></i> Code for this poster", href: "https://github.com/karaesmen/SummerCamp2019/eposter", align: right }
+---
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(htmlwidgets)
+library(slickR)
+library(tidyverse)
+library(wordcloud2)
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+E-Poster {data-orientation=columns}
+=====================================
+
+Col1 {data-width=630 .no-padding}
+-------------------------------------
+
+### `r shiny::icon('map-signs')` Introduction
+
+<!-- One of the advantages of learning `r shiny::icon('r-project')` is the vast number of learning material produced by enthusiast and instructors in the community.     -->
+
+While most of `r #shiny::icon('r-project')`the R teaching material is designed for adults or young adults, there are few examples for teaching middle- or high-schoolers.       
+
+This e-poster presents a `learnr` showcase of a short R`r #shiny::icon('r-project')` introduction session with a young audience and compares student feedback to a similar session conducted with a pre-written R`r #shiny::icon('r-project')` script.
+
+Tutorial can be found at:
+[suchestoncampbell-lab.shinyapps.io/SummerCamp2019/](https://suchestoncampbell-lab.shinyapps.io/SummerCamp2019/)
+
+### `r shiny::icon('map')` Context
+ 
+R`r #shiny::icon('r-project')` session was a part of the **Data Science for Women Summer Camp** organized by the Translational Data Analytics Institute at the Ohio State University.  The camp has no costs to students and admission preference is given to less privileged schools in Columbus, OH.   
+
+Aim of the camp is to introduce female students to wide-range application of analytics in a variety of fields and encourage them to pursue an analytic career in the future.
+
+The camp has been organized twice, where 2018 R session was conducted with a pre-written R script and RStudio and 2019 session with learnr tutorial.
+
+### `r shiny::icon('users')` Audience and Session Setup
+
+Introductory `r shiny::icon('r-project')` session included 24 young female students in grades 8-10, with no programming or statistical background. Students were expected to work in pairs and share one laptop, totaling 12 laptops during the session.
+
+Time allotted to the session was 50 mins and camp organizers requested a health related data set to used during the session.
+
+While not obvious at first, the session setup bares some challenges to the instructor: limited session time, easily distracted and confused audience and 12 PCs running on Windows OS requiring R installation.
+
+### `r shiny::icon('lightbulb')` `learnr` Saves the Day
+
+`learnr` package allows interactive R tutorial development with an easy RMarkdown syntax, relying on Shiny on the back-end. As such user interface through RStudio provides easy deployment with **shinyapps.io**.   
+
+Using `learnr` in the classroom alleviates the need for RStudio IDE introduction, script and console components of R and let's the audience to immediately engage with interactive code chunks embedded in the document. Hints and pre-written code help users to experiment without being completely lost.    
+
+Finally, hosting the tutorial on the web, alleviates the need to install R locally or create separate accounts for RStudio cloud. 
+
+
+Col2 {data-width=645 .no-padding}
+-------------------------------------
+###  `r shiny::icon('bullhorn')`  Student Feedback
+
+```{r, fig.width=12}
+lvls <- c("Dislike a lot",
+  "Dislike",		
+  "Dislike a little",
+  "Like a little",
+ "Like",		
+ "Like a lot")
+cols <- c("#ffd45b",
+          "#f6b44d",
+          #"#db9671",
+          "#ba7a8d",
+          "#8d5eaa",
+          "#3940bb",
+          "#0033b0")
+
+fb <- read_csv("eposter/student_feedback.csv") %>%
+  mutate(feedback = factor(feedback, levels = lvls),
+         session = factor(session, 
+                          levels = c("rscript",
+                                     "learnr"),
+                          labels = c("Session with\nR script",
+                                     "Session with\nlearnr tutorial")),
+         pcent = round(pcent, 0))
+ggplot(fb, aes(feedback, pcent)) +
+  geom_col(aes(fill=feedback)) +
+  geom_text(data=filter(fb, pcent > 0), 
+            aes(label=paste0(pcent, "%")),
+            nudge_y=-2, size=10) +
+    geom_text(data=filter(fb, pcent < 1), 
+            label="0%",nudge_y=2, size=10) +
+  scale_fill_manual(values = cols[6:1]) +
+  facet_grid(~session) +
+  guides(fill=FALSE) +
+  coord_flip() +
+  xlab(NULL) +
+  ylab(NULL) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x.bottom = element_blank(),
+        axis.text.x.top = element_blank(),
+        axis.text.y = element_text(size=30),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = 32))
+```
+
+### `r shiny::icon('paper-plane')` Students Describe Their Experience with One Word
+
+```{r, eval=FALSE}
+wrds <- "Great
+fun
+Interested
+informative
+informative
+Engaged.
+Funkyfresh
+Exciting.
+New
+Exciting
+Fun
+Fun
+Fun
+fun
+inspired
+Wow
+Informative
+exhausting
+Wow
+Fun
+Spicy
+Different
+stress
+"
+learnrwrds <- scan(text=wrds, what = "character") %>%
+  tolower(.) %>%
+  str_remove_all("[.]") %>%
+  data.frame(words=.) %>%
+  count(words) %>%
+  arrange(n) %>%
+  mutate(cols = c(rep("#ffd45b", 10),
+                  "#D95F02",
+                  "#E7298A",
+                  "#7570B3",
+                  "#1B9E77"))
+
+ 
+rscrptwrds <- scan(text = "joyful
+Cool
+Informative
+Boring
+Fun
+Excellent
+Boring
+interesting
+Interesting
+excited", what="character") %>%
+  tolower(.) %>%
+  str_remove_all("[.]") %>%
+  data.frame(words=.) %>%
+  count(words) %>%
+  arrange(n) %>%
+  mutate(cols = c(rep("#ffd45b", 6),
+                  "#E7298A",
+                  "#7570B3"))
+
+par(mfrow=c(1, 2))
+
+wordcloud::wordcloud(rscrptwrds$words, rscrptwrds$n, 
+            scale =c(3,0.4),min.freq = 0, 
+            ordered.colors = TRUE, random.order=FALSE, 
+            
+          colors=rscrptwrds$cols)
+
+wordcloud::wordcloud(learnrwrds$words, learnrwrds$n, 
+            scale =c(6,0.4),min.freq = 0, 
+            ordered.colors = TRUE, random.order=FALSE, #rot.per=0.5,
+          
+          colors=learnrwrds$cols)
+
+```
+
+```{r}
+include_graphics("img/wcloud.png")
+```
+
+### `r shiny::icon('camera-retro')` Snapshots from the session
+
+```{r}
+imgurl <- "https://github.com/karaesmen/SummerCamp2019/raw/master/eposter/img/"
+imgs <- c("DSC00153.jpg", "DSC00168.JPG", "DSC00174.JPG", "DSC00176.JPG", "DSC00178.JPG", "GroupPic.jpg")
+imgs <- paste0(imgurl,imgs)
+slicky <- slickR(obj = imgs, height=280, width = "95%")
+slicky + slickR::settings(dots = FALSE, autoplay = TRUE, autoplaySpeed = 1000)
+```
+
+Col3 {data-width=645 .no-padding}
+-------------------------------------
+
+### `r shiny::icon('comments')` Student Comments - Session with R script 
+
+```{r}
+include_graphics("img/student_feedback1.png")
+```
+
+
+### `r shiny::icon('comments')` Student Comments - Session with `learnr` Tutorial
+
+```{r}
+include_graphics("img/student_feedback2.png")
+```
+
+### `r shiny::icon('id-card')` About Me
+
+I am Ezgi Karaesmen, a final year PhD student at the Ohio State University, College of Pharmacy. I work with clinical and large genomic datasets to understand the association between genetics and bone marrow transplant outcomes. 
+
+I am also an R Studio certified tidyverse instructor and one of the co-organizers of R-Ladies Columbus in Ohio. I thoroughly enjoy teaching R and lead workshops all around Columbus whenever I can.
+
+To learn more about me visit [ezgikaraesmen.com](ezgikaraesmen.com).
+
+
+Tutorial
+=====================================
+<!-- https://suchestoncampbell-lab.shinyapps.io/SummerCamp2019/ -->
+<iframe src="https://suchestoncampbell-lab.shinyapps.io/SummerCamp2019/" width=100%, height=100%></iframe>
